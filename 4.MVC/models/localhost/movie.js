@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { readJSON } from '../utils/util.js'
+import { readJSON } from '../../utils/util.js'
 const movies = readJSON('../movies.json')
 
 export class MovieModel {

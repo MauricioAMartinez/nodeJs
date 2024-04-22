@@ -3,11 +3,11 @@
 GET http://localhost:3000/movies
 
 ### Recupera una pelicula por id
-GET http://localhost:3000/movies/dcdd0fad-a94c-4810-8acc-5f108d3b18c3
+GET http://localhost:3000/movies/0aac9c0c-00cd-11ef-8724-e1dfb6f39f43
 
 ### Recupera todas las peliculas por un genero
 
-GET http://localhost:3000/movies?year=1993
+GET http://localhost:3000/movies?genre=drama
 
 ### Crea una pelicula
 POST http://localhost:3000/movies

@@ -1,5 +1,5 @@
 import { MongoClient, ServerApiVersion } from 'mongodb'
-const uri = 'mongodb+srv://mauricioMartinez:<password>@cluster0.4gpoxv3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+const uri = 'mongodb+srv://mauricioMartinez:1njzxARCW0c6FpYY@cluster0.4gpoxv3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -24,12 +24,20 @@ async function run () {
 }
 run().catch(console.dir)
 
+const db = client.db('mauriciodb')
+const moviesCollection = db.collection('movies')
+
 export class MovieModel {
-  static async getAll ({ genre }) {
-    const db = await run()
-    if (genre) {
-      return db.collection('movies').find({ genre }).toArray()
+  static async getAll ({ genre } = {}) {
+    if (!genre) {
+      const movies = await moviesCollection.find().toArray()
+      return JSON.parse(JSON.stringify(movies))
     }
-    return db.collection('movies').find().toArray()
+    const query = { genre: genre }
+    const movies = await moviesCollection.find(query).toArray()
+    return JSON.parse(JSON.stringify(movies))
   }
 }
+
+// MovieModel.getAll({ genre: 'Action' })
+// MovieModel.getAll()
