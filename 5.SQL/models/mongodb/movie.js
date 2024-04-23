@@ -1,5 +1,9 @@
-import { MongoClient, ServerApiVersion } from 'mongodb'
-const uri = 'mongodb+srv://mauricioMartinez:1njzxARCW0c6FpYY@cluster0.4gpoxv3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+import { MongoClient, ServerApiVersion, ObjectId } from 'mongodb'
+import dotenv from 'dotenv'
+
+dotenv.config()
+
+const uri = process.env.MONGODB_URI
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -10,34 +14,69 @@ const client = new MongoClient(uri, {
   }
 })
 
-async function run () {
+async function connect () {
   try {
-    // Connect the client to the server(optional starting in v4.7)
     await client.connect()
-    // Send a ping to confirm a successful connection
-    await client.db('admin').command({ ping: 1 })
-    console.log('Pinged your deployment. You successfully connected to MongoDB!')
-  } finally {
-    // Ensures that the client will close when you finish/error
+    const database = client.db('database')
+    console.log('Connected to the database')
+    return database.collection('movies')
+  } catch (error) {
+    console.error('Error connecting to the database')
+    console.error(error)
     await client.close()
   }
 }
-run().catch(console.dir)
-
-const db = client.db('mauriciodb')
-const moviesCollection = db.collection('movies')
 
 export class MovieModel {
-  static async getAll ({ genre } = {}) {
-    if (!genre) {
-      const movies = await moviesCollection.find().toArray()
-      return JSON.parse(JSON.stringify(movies))
+  static async getAll ({ genre }) {
+    const db = await connect()
+
+    if (genre) {
+      return db.find({
+        genre: {
+          $elemMatch: {
+            $regex: genre,
+            $options: 'i'
+          }
+        }
+      }).toArray()
     }
-    const query = { genre: genre }
-    const movies = await moviesCollection.find(query).toArray()
-    return JSON.parse(JSON.stringify(movies))
+
+    return db.find({}).toArray()
+  }
+
+  static async getById ({ id }) {
+    const db = await connect()
+    const objectId = new ObjectId(id)
+    return db.findOne({ _id: objectId })
+  }
+
+  static async create ({ input }) {
+    const db = await connect()
+
+    const { insertedId } = await db.insertOne(input)
+
+    return {
+      id: insertedId,
+      ...input
+    }
+  }
+
+  static async delete ({ id }) {
+    const db = await connect()
+    const objectId = new ObjectId(id)
+    const { deletedCount } = await db.deleteOne({ _id: objectId })
+    return deletedCount > 0
+  }
+
+  static async update ({ id, input }) {
+    const db = await connect()
+    const objectId = new ObjectId(id)
+
+    const { ok, value } = await db.findOneAndUpdate({ _id: objectId }, { $set: input }, { returnNewDocument: true })
+
+    if (!ok) return false
+
+    return value
   }
 }
-
-// MovieModel.getAll({ genre: 'Action' })
-// MovieModel.getAll()
